@@ -4,7 +4,7 @@ The given application has the purpose of sending zip files between different rec
 
 1. In the anaconda prompt, go to this folder and run: 
    (make sure your environment has the necessary packages to run the scvript)
-	> python server.python 
+	> python server.py
 2. Open two to three new tabs on your web browser and type:
 	> http://localhost:5000/
    This will open a few different clients to play around with.
