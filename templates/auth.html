@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Package Transfer System - Authentication</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-r from-blue-500 to-purple-600 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-white rounded-lg shadow-xl overflow-hidden">
+        <div class="bg-gray-50 p-6">
+            <h1 class="text-3xl font-bold text-center text-gray-900">Package Transfer</h1>
+            <p class="mt-2 text-center text-gray-600">Send and receive files securely</p>
+        </div>
+
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-6">
+                <span class="text-sm font-medium text-gray-700">Login</span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="authToggle" class="sr-only peer" onchange="toggleAuth()">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                </label>
+                <span class="text-sm font-medium text-gray-700">Register</span>
+            </div>
+
+            <div id="loginForm" class="space-y-4">
+                <h2 class="text-xl font-semibold mb-4 text-gray-900">Login</h2>
+                <input type="text" id="loginUsername" placeholder="Username" 
+                       class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                <input type="password" id="loginPassword" placeholder="Password" 
+                       class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                <button onclick="login()" 
+                        class="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition">
+                    Login
+                </button>
+            </div>
+
+            <div id="registerForm" class="space-y-4 hidden">
+                <h2 class="text-xl font-semibold mb-4 text-gray-900">Register</h2>
+                <input type="text" id="regUsername" placeholder="Choose Username" 
+                       class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                <input type="password" id="regPassword" placeholder="Choose Password" 
+                       class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-500">
+                <button onclick="register()" 
+                        class="w-full bg-purple-500 text-white p-3 rounded-lg hover:bg-purple-600 transition">
+                    Create Account
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleAuth() {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            loginForm.classList.toggle('hidden');
+            registerForm.classList.toggle('hidden');
+        }
+
+        async function register() {
+            const username = document.getElementById('regUsername').value;
+            const password = document.getElementById('regPassword').value;
+            
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ username, password })
+                });
+                
+                if (response.ok) {
+                    alert('Registration successful! Please login.');
+                    toggleAuth();
+                } else {
+                    const data = await response.json();
+                    alert(data.error || 'Registration failed');
+                }
+            } catch (error) {
+                alert('Error: ' + error);
+            }
+        }
+        
+        async function login() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ username, password })
+                });
+                
+                if (response.ok) {
+                    localStorage.setItem('currentUser', username);
+                    window.location.href = '/dashboard';
+                } else {
+                    alert('Login failed');
+                }
+            } catch (error) {
+                alert('Error: ' + error);
+            }
+        }
+    </script>
+</body>
+</html>

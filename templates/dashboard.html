@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Package Transfer System - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-r from-blue-500 to-purple-600 min-h-screen">
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <span class="text-2xl font-bold text-gray-800">Package Transfer</span>
+                <div class="flex items-center space-x-4">
+                    <span id="userDisplay" class="text-gray-600"></span>
+                    <button onclick="logout()" 
+                            class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto p-6">
+        <div class="grid md:grid-cols-2 gap-6">
+            <div class="bg-white rounded-lg shadow-xl overflow-hidden">
+                <div class="bg-gray-50 p-4">
+                    <h2 class="text-2xl font-bold text-gray-800">Send Package</h2>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-gray-700 mb-2">Recipient Username</label>
+                        <input type="text" id="recipient" 
+                               class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-2">File</label>
+                        <input type="file" id="fileInput" 
+                               class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <button onclick="sendPackage()" 
+                            class="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition">
+                        Send Package
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-xl overflow-hidden">
+                <div class="bg-gray-50 p-4">
+                    <h2 class="text-2xl font-bold text-gray-800">Your Packages</h2>
+                </div>
+                <div class="p-6 space-y-4">
+                    <button onclick="checkPackages()" 
+                            class="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 transition">
+                        Refresh Packages
+                    </button>
+                    <div id="packageList" class="space-y-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const currentUser = localStorage.getItem('currentUser');
+        if (!currentUser) {
+            window.location.href = '/';
+        }
+        document.getElementById('userDisplay').textContent = `Welcome, ${currentUser}`;
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = '/';
+        }
+
+        async function sendPackage() {
+            const recipient = document.getElementById('recipient').value;
+            const fileInput = document.getElementById('fileInput');
+            
+            if (!recipient || !fileInput.files[0]) {
+                alert('Please fill all fields');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            
+            try {
+                const response = await fetch(`/api/send/${recipient}`, {
+                    method: 'POST',
+                    headers: {'X-User-ID': currentUser},
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    alert('Package sent successfully');
+                    fileInput.value = '';
+                } else {
+                    const data = await response.json();
+                    alert(data.error || 'Error sending package');
+                }
+            } catch (error) {
+                alert('Error: ' + error);
+            }
+        }
+        
+        async function checkPackages() {
+            try {
+                const response = await fetch(`/api/receive/${currentUser}`);
+                const data = await response.json();
+                
+                const packageList = document.getElementById('packageList');
+                packageList.innerHTML = '';
+                
+                if (data.packages && data.packages.length > 0) {
+                    data.packages.forEach(filename => {
+                        const div = document.createElement('div');
+                        div.className = 'bg-gray-50 p-4 rounded-lg flex justify-between items-center';
+                        div.innerHTML = `
+                            <span class="truncate flex-1">${filename}</span>
+                            <button onclick="downloadPackage('${filename}')"
+                                    class="ml-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
+                                Download
+                            </button>
+                        `;
+                        packageList.appendChild(div);
+                    });
+                } else {
+                    packageList.innerHTML = '<p class="text-gray-500 text-center">No packages available</p>';
+                }
+            } catch (error) {
+                alert('Error: ' + error);
+            }
+        }
+        
+        async function downloadPackage(filename) {
+            window.location.href = `/api/download/${currentUser}/${filename}`;
+        }
+
+        // Initial package check
+        checkPackages();
+    </script>
+</body>
+</html>
